@@ -1,0 +1,84 @@
+global(VERSION_saker.maven.classpath) = "0.8.0"
+
+compile(
+	out javac,
+){
+	$javac = saker.java.compile(
+		SourceDirectories: [
+			main/src/main/,
+		],
+		ClassPath: [
+			saker.java.classpath.bundle(nest.dependency.resolve(
+				[
+					saker.java.compiler-api,
+					saker.build-api,
+					saker.nest-api,
+					saker.maven.support,
+				], 
+				Filters: nest.dependency.filter.compile(CompileTransitive: false)
+			)),
+			
+		],
+		Identifier: saker.maven.classpath,
+	)
+}
+export(
+	in compile = include(compile),
+	out jar,
+	out sourcejar,
+	
+	out bundlepaths = [
+		$jar[Path],
+		$sourcejar[Path],
+	]
+){
+	$jar = saker.jar.create(
+		Output: saker.maven.classpath.jar,
+		Resources: [
+			{
+				Directory: main/resources/,
+				Resources: **,
+			},
+			{
+				Directory: $compile[javac][ClassDirectory],
+				Resources: saker/maven/classpath/main/**,
+			},
+		],
+		Manifest: {
+			MainAttributes: {
+				Nest-Bundle-Format-Version: 1,
+				Nest-Bundle-Identifier: "saker.maven.classpath-v{ global(VERSION_saker.maven.classpath) }",
+				Nest-Bundle-Source: "saker.maven.classpath-sources-v{ global(VERSION_saker.maven.classpath) }"
+			},
+		},
+	)
+	$sourcejar = saker.jar.create(
+		Output: saker.maven.classpath-sources.jar,
+		Resources: [
+			{
+				Directory: main/src/main/,
+				Resources: **/*.java,
+			},
+		],
+		Manifest: {
+			MainAttributes: {
+				Nest-Bundle-Format-Version: 1,
+				Nest-Bundle-Identifier: "saker.maven.classpath-sources-v{ global(VERSION_saker.maven.classpath) }",
+			},
+		},
+	)
+}
+install() {
+	$export = include(export)
+	nest.local.install($export[bundlepaths])
+}
+upload(){
+	$export = include(export, Path: saker.build)
+	include(Path: secret/secrets.build)
+	nest.server.upload(
+		Bundles: $export[bundlepaths],
+		APIKey: global(saker.maven.classpath.UPLOAD_API_KEY),
+		APISecret: global(saker.maven.classpath.UPLOAD_API_SECRET),
+		Overwrite: true,
+	)
+}
