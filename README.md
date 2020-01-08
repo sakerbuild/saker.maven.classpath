@@ -1,5 +1,7 @@
 # saker.maven.classpath
 
+![Build status](https://img.shields.io/azure-devops/build/sakerbuild/7a2f5570-dd09-4779-96c0-1a3c0d3c8b8b/12/master)
+
 Package containing build task for creating Java classpath during build execution with the [saker.build system](https://saker.build). The `saker.maven.classpath()` build task automatically downloads the specified artifacts and related sources to be used as an input to Java compilation.
 
 See the [documentation](https://saker.build/saker.maven.classpath/doc/) for more information.
