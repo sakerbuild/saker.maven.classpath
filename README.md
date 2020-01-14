@@ -1,6 +1,6 @@
 # saker.maven.classpath
 
-![Build status](https://img.shields.io/azure-devops/build/sakerbuild/7a2f5570-dd09-4779-96c0-1a3c0d3c8b8b/12/master)
+![Build status](https://img.shields.io/azure-devops/build/sakerbuild/7a2f5570-dd09-4779-96c0-1a3c0d3c8b8b/12/master) [![Latest version](https://mirror.nest.saker.build/badges/saker.maven.classpath/version.svg)](https://nest.saker.build/package/saker.maven.classpath "saker.maven.classpath | saker.nest")
 
 Package containing build task for creating Java classpath during build execution with the [saker.build system](https://saker.build). The `saker.maven.classpath()` build task automatically downloads the specified artifacts and related sources to be used as an input to Java compilation.
 
