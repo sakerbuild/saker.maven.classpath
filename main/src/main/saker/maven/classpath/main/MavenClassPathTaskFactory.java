@@ -34,13 +34,13 @@ import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
-import saker.build.thirdparty.saker.util.io.IOUtils;
-import saker.build.util.data.DataConverterUtils;
+import saker.build.trace.BuildTrace;
 import saker.build.util.property.IDEConfigurationRequiredExecutionProperty;
 import saker.maven.classpath.main.TaskDocs.DocArtifactClassPath;
 import saker.maven.support.api.ArtifactCoordinates;
 import saker.maven.support.api.MavenOperationConfiguration;
 import saker.maven.support.api.dependency.MavenDependencyResolutionTaskOutput;
+import saker.maven.support.api.dependency.ResolvedDependencyArtifact;
 import saker.maven.support.api.download.ArtifactDownloadTaskOutput;
 import saker.maven.support.api.download.ArtifactDownloadUtils;
 import saker.maven.support.api.download.ArtifactDownloadWorkerTaskOutput;
@@ -66,7 +66,7 @@ import saker.std.api.file.location.LocalFileLocation;
 		aliases = { "", "Artifact" },
 		required = true,
 		type = @NestTypeUsage(value = Collection.class,
-				elementTypes = saker.maven.support.main.TaskDocs.DocArtifactCoordinates.class),
+				elementTypes = saker.maven.support.main.TaskDocs.DocInputArtifactCoordinates.class),
 		info = @NestInformation("Specifies the artifact that should be part of the created class path.\n"
 				+ "The parameter accepts one or more artifact coordinates, or outputs from Maven dependency resolution, localization "
 				+ "or artifact download tasks.\n"
@@ -90,6 +90,10 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
+				if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+					BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_FRONTEND);
+				}
+
 				if (artifacts instanceof StructuredTaskResult) {
 					if (artifacts instanceof StructuredListTaskResult) {
 						StructuredListTaskResult arifactsstructuredlist = (StructuredListTaskResult) artifacts;
@@ -135,32 +139,31 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 					}
 					return handleArtifactCoordinates(taskcontext, getRepositoryOperationConfiguration(), coordinates);
 				}
-				Exception adaptexc = null;
-				try {
-					Object adapted = DataConverterUtils.adaptInterface(this.getClass().getClassLoader(), artifacts);
-					if (adapted instanceof ArtifactDownloadTaskOutput) {
-						ArtifactDownloadTaskOutput downloadoutput = (ArtifactDownloadTaskOutput) adapted;
-						return handleDownloadOutput(taskcontext, downloadoutput.getConfiguration(), downloadoutput);
-					}
-					if (adapted instanceof ArtifactLocalizationTaskOutput) {
-						ArtifactLocalizationTaskOutput localizationoutput = (ArtifactLocalizationTaskOutput) adapted;
-						return handleLocalizationOutput(taskcontext, localizationoutput.getConfiguration(),
-								localizationoutput);
-					}
-					if (adapted instanceof MavenDependencyResolutionTaskOutput) {
-						MavenDependencyResolutionTaskOutput depoutput = (MavenDependencyResolutionTaskOutput) adapted;
-						Set<ArtifactCoordinates> coordinates = ImmutableUtils
-								.makeImmutableLinkedHashSet(depoutput.getArtifactCoordinates());
-						return handleArtifactCoordinates(taskcontext, depoutput.getConfiguration(), coordinates);
-					}
-				} catch (Exception e) {
-					adaptexc = e;
+
+				if (artifacts instanceof ArtifactDownloadTaskOutput) {
+					ArtifactDownloadTaskOutput downloadoutput = (ArtifactDownloadTaskOutput) artifacts;
+					return handleDownloadOutput(taskcontext, downloadoutput.getConfiguration(), downloadoutput);
+				}
+				if (artifacts instanceof ArtifactLocalizationTaskOutput) {
+					ArtifactLocalizationTaskOutput localizationoutput = (ArtifactLocalizationTaskOutput) artifacts;
+					return handleLocalizationOutput(taskcontext, localizationoutput.getConfiguration(),
+							localizationoutput);
+				}
+				if (artifacts instanceof MavenDependencyResolutionTaskOutput) {
+					MavenDependencyResolutionTaskOutput depoutput = (MavenDependencyResolutionTaskOutput) artifacts;
+					Set<ArtifactCoordinates> coordinates = ImmutableUtils
+							.makeImmutableLinkedHashSet(depoutput.getArtifactCoordinates());
+					return handleArtifactCoordinates(taskcontext, depoutput.getConfiguration(), coordinates);
+				}
+				if (artifacts instanceof ResolvedDependencyArtifact) {
+					ResolvedDependencyArtifact resolvedartifact = (ResolvedDependencyArtifact) artifacts;
+					return handleArtifactCoordinates(taskcontext, resolvedartifact.getConfiguration(),
+							ImmutableUtils.singletonSet(resolvedartifact.getCoordinates()));
 				}
 
 				String coordsstr = Objects.toString(artifacts, null);
 				if (coordsstr == null) {
 					NullPointerException npe = new NullPointerException("null Artifacts input argument.");
-					IOUtils.addExc(npe, adaptexc);
 					taskcontext.abortExecution(npe);
 					return null;
 				}
@@ -168,7 +171,6 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 					return handleArtifactCoordinates(taskcontext, getRepositoryOperationConfiguration(),
 							Collections.singleton(ArtifactCoordinates.valueOf(coordsstr)));
 				} catch (IllegalArgumentException e) {
-					IOUtils.addExc(e, adaptexc);
 					taskcontext.abortExecution(e);
 					return null;
 				}
@@ -262,8 +264,11 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 	}
 
 	public static ArtifactCoordinates createSourceArtifactCoordinates(ArtifactCoordinates dlacoords) {
+		//always expect the sources to be in an artifact with "jar" extension
+		//    e.g. for aar (android libs) artifacts, the sources are still in a "jar" artifact, so using the same 
+		//         extension will fail
 		ArtifactCoordinates sourceacoords = new ArtifactCoordinates(dlacoords.getGroupId(), dlacoords.getArtifactId(),
-				"sources", dlacoords.getExtension(), dlacoords.getVersion());
+				"sources", "jar", dlacoords.getVersion());
 		return sourceacoords;
 	}
 

@@ -33,6 +33,7 @@ import saker.build.task.utils.StructuredListTaskResult;
 import saker.build.task.utils.StructuredTaskResult;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
+import saker.build.trace.BuildTrace;
 import saker.build.util.property.IDEConfigurationRequiredExecutionProperty;
 import saker.java.compiler.api.classpath.ClassPathReference;
 import saker.maven.support.api.ArtifactCoordinates;
@@ -68,6 +69,9 @@ public class MavenClassPathWorkerTaskFactory
 
 	@Override
 	public ClassPathReference run(TaskContext taskcontext) throws Exception {
+		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
+			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_CONFIGURATION);
+		}
 		taskcontext.setStandardOutDisplayIdentifier(MavenClassPathTaskFactory.TASK_NAME);
 
 		TaskFactory<? extends ArtifactLocalizationTaskOutput> localizetaskfactory = ArtifactLocalizationUtils
