@@ -1,4 +1,4 @@
+saker.maven.classpath-api
+	classpath: [0)
 saker.maven.support
 	classpath: 0.8
-saker.java.compiler-api
-	classpath: [0)

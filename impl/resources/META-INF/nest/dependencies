@@ -1,0 +1,4 @@
+saker.maven.classpath-api
+	classpath: [this]
+saker.java.compiler-api
+	classpath: [0)

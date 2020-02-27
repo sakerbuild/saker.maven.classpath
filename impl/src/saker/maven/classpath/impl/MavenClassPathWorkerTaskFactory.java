@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.maven.classpath.main;
+package saker.maven.classpath.impl;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -36,6 +36,7 @@ import saker.build.thirdparty.saker.util.io.SerialUtils;
 import saker.build.trace.BuildTrace;
 import saker.build.util.property.IDEConfigurationRequiredExecutionProperty;
 import saker.java.compiler.api.classpath.ClassPathReference;
+import saker.maven.classpath.main.MavenClassPathTaskFactory;
 import saker.maven.support.api.ArtifactCoordinates;
 import saker.maven.support.api.MavenOperationConfiguration;
 import saker.maven.support.api.localize.ArtifactLocalizationTaskOutput;
@@ -84,8 +85,7 @@ public class MavenClassPathWorkerTaskFactory
 				.getReportExecutionDependency(IDEConfigurationRequiredExecutionProperty.INSTANCE)) {
 			Set<ArtifactCoordinates> sourcedlcoordinates = new LinkedHashSet<>();
 			for (ArtifactCoordinates dlacoords : coordinates) {
-				ArtifactCoordinates sourceacoords = MavenClassPathTaskFactory
-						.createSourceArtifactCoordinates(dlacoords);
+				ArtifactCoordinates sourceacoords = createSourceArtifactCoordinates(dlacoords);
 
 				sourcedlcoordinates.add(sourceacoords);
 			}
@@ -109,8 +109,7 @@ public class MavenClassPathWorkerTaskFactory
 			MavenClassPathEntry cpentry = new MavenClassPathEntry(LocalFileLocation.create(dlres.getLocalPath()),
 					dlres.getContentDescriptor());
 			if (sourcedltaskid != null) {
-				ArtifactCoordinates sourceacoords = MavenClassPathTaskFactory
-						.createSourceArtifactCoordinates(dlres.getCoordinates());
+				ArtifactCoordinates sourceacoords = createSourceArtifactCoordinates(dlres.getCoordinates());
 				cpentry.setSourceAttachment(
 						new SourceAttachmentRetrievingStructuredTaskResult(sourcedltaskid, sourceacoords));
 			}
@@ -170,4 +169,12 @@ public class MavenClassPathWorkerTaskFactory
 		return getClass().getSimpleName() + "[]";
 	}
 
+	public static ArtifactCoordinates createSourceArtifactCoordinates(ArtifactCoordinates dlacoords) {
+		//always expect the sources to be in an artifact with "jar" extension
+		//    e.g. for aar (android libs) artifacts, the sources are still in a "jar" artifact, so using the same 
+		//         extension will fail
+		ArtifactCoordinates sourceacoords = new ArtifactCoordinates(dlacoords.getGroupId(), dlacoords.getArtifactId(),
+				"sources", "jar", dlacoords.getVersion());
+		return sourceacoords;
+	}
 }

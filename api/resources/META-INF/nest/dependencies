@@ -1,0 +1,5 @@
+saker.maven.support-api
+	classpath: [0)
+saker.maven.classpath-impl
+	classpath: [this]
+		compile-transitive: false

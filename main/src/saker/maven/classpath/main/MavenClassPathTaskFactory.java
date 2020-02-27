@@ -36,6 +36,10 @@ import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.trace.BuildTrace;
 import saker.build.util.property.IDEConfigurationRequiredExecutionProperty;
+import saker.maven.classpath.impl.MavenClassPathEntry;
+import saker.maven.classpath.impl.MavenClassPathReference;
+import saker.maven.classpath.impl.MavenClassPathWorkerTaskFactory;
+import saker.maven.classpath.impl.SourceAttachmentRetrievingStructuredTaskResult;
 import saker.maven.classpath.main.TaskDocs.DocArtifactClassPath;
 import saker.maven.support.api.ArtifactCoordinates;
 import saker.maven.support.api.MavenOperationConfiguration;
@@ -192,7 +196,8 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 				.getReportExecutionDependency(IDEConfigurationRequiredExecutionProperty.INSTANCE)) {
 			Set<ArtifactCoordinates> sourcelocalizecoordinates = new LinkedHashSet<>();
 			for (ArtifactCoordinates coordstr : localizationoutput.getCoordinates()) {
-				ArtifactCoordinates sourceacoords = createSourceArtifactCoordinates(coordstr);
+				ArtifactCoordinates sourceacoords = MavenClassPathWorkerTaskFactory
+						.createSourceArtifactCoordinates(coordstr);
 
 				sourcelocalizecoordinates.add(sourceacoords);
 			}
@@ -213,7 +218,8 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 			MavenClassPathEntry cpentry = new MavenClassPathEntry(LocalFileLocation.create(locres.getLocalPath()),
 					locres.getContentDescriptor());
 			if (sourcelocalizetaskid != null) {
-				ArtifactCoordinates sourceacoords = createSourceArtifactCoordinates(locres.getCoordinates());
+				ArtifactCoordinates sourceacoords = MavenClassPathWorkerTaskFactory
+						.createSourceArtifactCoordinates(locres.getCoordinates());
 				cpentry.setSourceAttachment(
 						new SourceAttachmentRetrievingStructuredTaskResult(sourcelocalizetaskid, sourceacoords));
 			}
@@ -233,7 +239,8 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 				.getReportExecutionDependency(IDEConfigurationRequiredExecutionProperty.INSTANCE)) {
 			Set<ArtifactCoordinates> sourcedlcoordinates = new LinkedHashSet<>();
 			for (ArtifactCoordinates coordstr : downloadoutput.getCoordinates()) {
-				ArtifactCoordinates sourceacoords = createSourceArtifactCoordinates(coordstr);
+				ArtifactCoordinates sourceacoords = MavenClassPathWorkerTaskFactory
+						.createSourceArtifactCoordinates(coordstr);
 
 				sourcedlcoordinates.add(sourceacoords);
 			}
@@ -251,7 +258,8 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 			MavenClassPathEntry cpentry = new MavenClassPathEntry(ExecutionFileLocation.create(dlres.getPath()),
 					dlres.getContentDescriptor());
 			if (sourcedltaskid != null) {
-				ArtifactCoordinates sourceacoords = createSourceArtifactCoordinates(dlres.getCoordinates());
+				ArtifactCoordinates sourceacoords = MavenClassPathWorkerTaskFactory
+						.createSourceArtifactCoordinates(dlres.getCoordinates());
 				cpentry.setSourceAttachment(
 						new SourceAttachmentRetrievingStructuredTaskResult(sourcedltaskid, sourceacoords));
 			}
@@ -261,15 +269,6 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 		MavenClassPathReference result = new MavenClassPathReference(entries);
 		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
 		return result;
-	}
-
-	public static ArtifactCoordinates createSourceArtifactCoordinates(ArtifactCoordinates dlacoords) {
-		//always expect the sources to be in an artifact with "jar" extension
-		//    e.g. for aar (android libs) artifacts, the sources are still in a "jar" artifact, so using the same 
-		//         extension will fail
-		ArtifactCoordinates sourceacoords = new ArtifactCoordinates(dlacoords.getGroupId(), dlacoords.getArtifactId(),
-				"sources", "jar", dlacoords.getVersion());
-		return sourceacoords;
 	}
 
 	private static Object handleArtifactCoordinates(TaskContext taskcontext, MavenOperationConfiguration config,

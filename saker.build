@@ -5,7 +5,9 @@ compile(
 ){
 	$javac = saker.java.compile(
 		SourceDirectories: [
-			main/src/main/,
+			main/src/,
+			api/src/,
+			impl/src/,
 		],
 		ClassPath: [
 			saker.java.classpath.bundle(nest.dependency.resolve(
@@ -24,15 +26,17 @@ compile(
 }
 export(
 	in compile = include(compile),
-	out jar,
+	out mainjar,
 	out sourcejar,
 	
 	out bundlepaths = [
-		$jar[Path],
+		$mainjar[Path],
+		$apijar[Path],
+		$impljar[Path],
 		$sourcejar[Path],
 	]
 ){
-	$jar = saker.jar.create(
+	$mainjar = saker.jar.create(
 		Output: saker.maven.classpath.jar,
 		Resources: [
 			{
@@ -43,10 +47,6 @@ export(
 				Directory: $compile[javac][ClassDirectory],
 				Resources: saker/maven/classpath/main/**,
 			},
-			{
-				Files: LICENSE,
-				TargetDirectory: META-INF,
-			},
 		],
 		Manifest: {
 			MainAttributes: {
@@ -56,11 +56,59 @@ export(
 			},
 		},
 	)
+	$apijar = saker.jar.create(
+		Output: saker.maven.classpath-api.jar,
+		Resources: [
+			{
+				Directory: api/resources/,
+				Resources: **,
+			},
+			{
+				Directory: $compile[javac][ClassDirectory],
+				Resources: saker/maven/classpath/api/**,
+			},
+		],
+		Manifest: {
+			MainAttributes: {
+				Nest-Bundle-Format-Version: 1,
+				Nest-Bundle-Identifier: "saker.maven.classpath-api-v{ global(VERSION_saker.maven.classpath) }",
+				Nest-Bundle-Source: "saker.maven.classpath-sources-v{ global(VERSION_saker.maven.classpath) }"
+			},
+		},
+	)
+	$impljar = saker.jar.create(
+		Output: saker.maven.classpath-impl.jar,
+		Resources: [
+			{
+				Directory: impl/resources/,
+				Resources: **,
+			},
+			{
+				Directory: $compile[javac][ClassDirectory],
+				Resources: saker/maven/classpath/impl/**,
+			},
+			{
+				Files: LICENSE,
+				TargetDirectory: META-INF,
+			},
+		],
+		Manifest: {
+			MainAttributes: {
+				Nest-Bundle-Format-Version: 1,
+				Nest-Bundle-Identifier: "saker.maven.classpath-impl-v{ global(VERSION_saker.maven.classpath) }",
+				Nest-Bundle-Source: "saker.maven.classpath-sources-v{ global(VERSION_saker.maven.classpath) }"
+			},
+		},
+	)
 	$sourcejar = saker.jar.create(
 		Output: saker.maven.classpath-sources.jar,
 		Resources: [
 			{
-				Directory: main/src/main/,
+				Directory: [
+					main/src/main/,
+					api/src/main/,
+					impl/src/main/,
+				],
 				Resources: **/*.java,
 			},
 			{

@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package saker.maven.classpath.main;
+package saker.maven.classpath.impl;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,7 +32,7 @@ import saker.maven.support.api.localize.ArtifactLocalizationWorkerTaskOutput;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.LocalFileLocation;
 
-class SourceAttachmentRetrievingStructuredTaskResult implements StructuredTaskResult, Externalizable {
+public class SourceAttachmentRetrievingStructuredTaskResult implements StructuredTaskResult, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private TaskIdentifier downloadOrLocalizeTaskId;
