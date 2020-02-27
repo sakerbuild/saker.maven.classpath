@@ -40,6 +40,8 @@ import saker.maven.classpath.impl.MavenClassPathEntry;
 import saker.maven.classpath.impl.MavenClassPathReference;
 import saker.maven.classpath.impl.MavenClassPathWorkerTaskFactory;
 import saker.maven.classpath.impl.SourceAttachmentRetrievingStructuredTaskResult;
+import saker.maven.classpath.impl.option.ArtifactMavenClassPathInputOption;
+import saker.maven.classpath.impl.option.MavenClassPathEntryInput;
 import saker.maven.classpath.main.TaskDocs.DocArtifactClassPath;
 import saker.maven.support.api.ArtifactCoordinates;
 import saker.maven.support.api.MavenOperationConfiguration;
@@ -273,7 +275,14 @@ public class MavenClassPathTaskFactory extends FrontendTaskFactory<Object> {
 
 	private static Object handleArtifactCoordinates(TaskContext taskcontext, MavenOperationConfiguration config,
 			Set<ArtifactCoordinates> coordinates) {
-		MavenClassPathWorkerTaskFactory workertask = new MavenClassPathWorkerTaskFactory(config, coordinates);
+		Set<MavenClassPathEntryInput> inputs = new LinkedHashSet<>();
+		for (ArtifactCoordinates coord : coordinates) {
+			inputs.add(new MavenClassPathEntryInput(new ArtifactMavenClassPathInputOption(coord), null,
+					new ArtifactMavenClassPathInputOption(
+							MavenClassPathWorkerTaskFactory.createSourceArtifactCoordinates(coord)),
+					null));
+		}
+		MavenClassPathWorkerTaskFactory workertask = new MavenClassPathWorkerTaskFactory(config, inputs);
 		taskcontext.startTask(workertask, workertask, null);
 
 		StructuredTaskResult result = new SimpleStructuredObjectTaskResult(workertask);
