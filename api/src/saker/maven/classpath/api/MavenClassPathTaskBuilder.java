@@ -32,6 +32,7 @@ import saker.maven.classpath.impl.option.FileMavenClassPathInputOption;
 import saker.maven.classpath.impl.option.LiteralStructuredTaskResult;
 import saker.maven.classpath.impl.option.MavenClassPathEntryInput;
 import saker.maven.classpath.impl.option.MavenClassPathInputOption;
+import saker.maven.classpath.impl.option.TaskResultMavenClassPathInputOption;
 import saker.maven.support.api.ArtifactCoordinates;
 import saker.maven.support.api.MavenOperationConfiguration;
 import saker.std.api.file.location.FileLocation;
@@ -40,6 +41,8 @@ import saker.std.api.file.location.FileLocation;
  * Builder class for creating a build task that returns a Maven classpath object.
  * <p>
  * Use {@link #newBuilder()} to create a new instance.
+ * 
+ * @since saker.maven.classpath 0.8.1
  */
 public class MavenClassPathTaskBuilder {
 	private MavenOperationConfiguration configuration;
@@ -175,6 +178,26 @@ public class MavenClassPathTaskBuilder {
 		}
 
 		/**
+		 * Sets the input of the classpath.
+		 * <p>
+		 * The argument task result should resolve to a {@link FileLocation}.
+		 * 
+		 * @param input
+		 *            The input task result.
+		 * @return <code>this</code>
+		 * @see ClassPathEntry#getInputFile()
+		 * @since saker.maven.classpath 0.8.2
+		 */
+		public EntryBuilder setInput(StructuredTaskResult input) {
+			if (input == null) {
+				this.input = null;
+			} else {
+				this.input = new TaskResultMavenClassPathInputOption(input);
+			}
+			return this;
+		}
+
+		/**
 		 * Sets the source attachment of the classpath.
 		 * 
 		 * @param input
@@ -207,6 +230,27 @@ public class MavenClassPathTaskBuilder {
 				this.sourceAttachment = null;
 			} else {
 				this.sourceAttachment = new ArtifactMavenClassPathInputOption(sourceAttachment);
+			}
+			return this;
+		}
+
+		/**
+		 * Sets the source attachment of the classpath.
+		 * <p>
+		 * The argument is the equivalent of setting the result of the {@link ClassPathEntry#getSourceAttachment()}
+		 * method.
+		 * 
+		 * @param input
+		 *            The source attachment task result.
+		 * @return <code>this</code>
+		 * @see ClassPathEntry#getSourceAttachment()
+		 * @since saker.maven.classpath 0.8.2
+		 */
+		public EntryBuilder setSourceAttachment(StructuredTaskResult sourceAttachment) {
+			if (sourceAttachment == null) {
+				this.sourceAttachment = null;
+			} else {
+				this.sourceAttachment = new TaskResultMavenClassPathInputOption(sourceAttachment);
 			}
 			return this;
 		}
