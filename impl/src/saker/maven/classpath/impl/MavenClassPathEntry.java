@@ -72,6 +72,10 @@ public class MavenClassPathEntry implements ClassPathEntry, Externalizable {
 		this.implementationVersionKey = implementationVersionKey;
 	}
 
+	public boolean hasInput() {
+		return fileLocation != null;
+	}
+
 	@Override
 	public FileLocation getFileLocation() {
 		return fileLocation;

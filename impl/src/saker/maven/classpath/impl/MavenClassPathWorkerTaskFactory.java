@@ -130,8 +130,17 @@ public class MavenClassPathWorkerTaskFactory
 			in.getInput().accept(new MavenClassPathInputOption.Visitor() {
 				@Override
 				public void visit(StructuredTaskResult taskresult) {
-					// TODO implement
-					throw new UnsupportedOperationException("not yet implemented");
+					Object res = taskresult.toResult(taskcontext);
+					if (res == null) {
+						//don't include this class path entry in the result
+						return;
+					}
+					if (res instanceof FileLocation) {
+						entry.setFileLocation((FileLocation) res);
+						return;
+					}
+					// XXX support more input types
+					throw new UnsupportedOperationException("unsupported class path entry type: " + res);
 				}
 
 				@Override
@@ -149,6 +158,10 @@ public class MavenClassPathWorkerTaskFactory
 					entry.setImplementationVersionKey(dlres.getContentDescriptor());
 				}
 			});
+			if (!entry.hasInput()) {
+				//input not set, don't include the entry
+				continue;
+			}
 			if (entry.getImplementationVersionKey() == null) {
 				StructuredTaskResult inimplkey = in.getImplementationVersionKey();
 				if (inimplkey != null) {
