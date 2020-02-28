@@ -105,9 +105,9 @@ export(
 		Resources: [
 			{
 				Directory: [
-					main/src/main/,
-					api/src/main/,
-					impl/src/main/,
+					main/src/,
+					api/src/,
+					impl/src/,
 				],
 				Resources: **/*.java,
 			},
